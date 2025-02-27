@@ -1,0 +1,4 @@
+name: tntdupe
+main: com.lucky.tntdupe.TntShulkerDupe
+version: 1.0-SNAPSHOT
+api-version: 1.21

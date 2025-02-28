@@ -13,4 +13,4 @@ Requires Spigot/Paper 1.16+ and Java 8+
 
 ## Download
 
-You can download the latest version of HunterTag from [here](./TNTShulkerDupe.jar).
+You can download the latest version of HunterTag from [here](./https://github.com/imLuckii/MCJavaPlugins/raw/refs/heads/main/TNTShulkerDupe/TNTShulkerDupe.jar).

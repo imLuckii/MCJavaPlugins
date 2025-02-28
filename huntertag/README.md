@@ -25,3 +25,9 @@ A Minecraft minigame where hunters try to freeze runners by hitting them.
 - Challenge loss: -5 points
 
 Requires Spigot/Paper 1.16+ and Java 8+
+
+## Download
+
+You can download the latest version of HunterTag from [here](./HunterTag.jar).
+
+

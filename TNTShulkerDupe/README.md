@@ -10,3 +10,7 @@ A Minecraft plugin that duplicates shulker boxes when broken by TNT explosions.
 
 Note: Created for entertainment/content creation purposes only.
 Requires Spigot/Paper 1.16+ and Java 8+
+
+## Download
+
+You can download the latest version of HunterTag from [here](./TNTShulkerDupe.jar).

@@ -1,7 +1,6 @@
 package com.lucky.tntdupe;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.event.EventHandler;

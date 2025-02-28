@@ -1,4 +1,12 @@
 # TNTShulkerDupe
 
-- This plugin dupes a shulker box if it's broken by a TNT.
-- Made this for a friend to use in his YouTube video.
+A Minecraft plugin that duplicates shulker boxes when broken by TNT explosions.
+
+## Usage
+1. Place shulker box
+2. Place TNT next to it
+3. Ignite TNT
+4. Box duplicates if broken by explosion
+
+Note: Created for entertainment/content creation purposes only.
+Requires Spigot/Paper 1.16+ and Java 8+

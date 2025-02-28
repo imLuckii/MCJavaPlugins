@@ -26,3 +26,6 @@ commands:
   huntkit:
     description: Give a player a hunter kit.
     usage: /hunterkit <player>
+  itemdrop:
+    description: Drop a bow with lightning at config location or target block.
+    usage: /itemdrop [or /itemdrop <look at block>]

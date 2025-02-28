@@ -1,25 +1,37 @@
 package com.imlucky;
 
+import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.command.*;
 import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.*;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.entity.EntityType;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.block.Block;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.persistence.PersistentDataContainer;
 
 public class Loader extends JavaPlugin implements Listener {
   private static final Logger LOGGER = Logger.getLogger("huntertag");
+  private NamespacedKey specialBowKey;
 
   private GameManager gameManager;
   private GameScoreboard gameScoreboard;
@@ -37,9 +49,14 @@ public class Loader extends JavaPlugin implements Listener {
     getCommand("challenge").setExecutor(new ChallengeCommand());
     getCommand("huntkit").setExecutor(new HuntkitCommand());
     getCommand("runkit").setExecutor(new RunkitCommand());
+    getCommand("itemdrop").setExecutor(new ItemDropCommand());
 
     gameManager.loadPoints(getConfig());
     LOGGER.info("huntertag enabled");
+
+    specialBowKey = new NamespacedKey(this, "special_bow");
+    saveDefaultConfig();
+    saveResource("bowdrop.yml", false);
 
     new org.bukkit.scheduler.BukkitRunnable() {
       @Override
@@ -131,7 +148,6 @@ public class Loader extends JavaPlugin implements Listener {
     // needed.
     // else if (gameManager.isRunner(damager) && gameManager.isRunner(target) &&
     // !gameManager.isFrozen(target)) {
-    // // Here runners cannot hit each other; only unfreeze events are allowed.
     // event.setCancelled(true);
     // return;
     // }
@@ -168,7 +184,29 @@ public class Loader extends JavaPlugin implements Listener {
         p.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
             new net.md_5.bungee.api.chat.TextComponent(ChatColor.RED + "You are frozen!"));
       }
-      event.setCancelled(true);
+      Location from = event.getFrom();
+      Location to = event.getTo();
+      if (to != null && (from.getX() != to.getX() || from.getZ() != to.getZ())) {
+        event.setTo(new Location(from.getWorld(), from.getX(), to.getY(), from.getZ(), to.getYaw(), to.getPitch()));
+      }
+    }
+  }
+
+  @EventHandler
+  public void onItemPickup(PlayerPickupItemEvent event) {
+    Player player = event.getPlayer();
+    ItemStack item = event.getItem().getItemStack();
+
+    if (item != null && item.getType() == Material.BOW && item.hasItemMeta()) {
+      PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
+      if (container.has(specialBowKey, PersistentDataType.BYTE)) {
+        new org.bukkit.scheduler.BukkitRunnable() {
+          @Override
+          public void run() {
+            player.getInventory().addItem(new ItemStack(Material.ARROW, 1));
+          }
+        }.runTaskLater(this, 10L);
+      }
     }
   }
 
@@ -333,7 +371,7 @@ public class Loader extends JavaPlugin implements Listener {
       pickaxeMeta.setUnbreakable(true);
       pickaxe.setItemMeta(pickaxeMeta);
       player.getInventory().addItem(pickaxe);
-      player.sendMessage(ChatColor.GREEN + "Infinite Red Terracotta kit applied to your offhand.");
+      player.sendMessage(ChatColor.GREEN + "You have received the hunter kit!");
       return true;
     }
   }
@@ -362,7 +400,47 @@ public class Loader extends JavaPlugin implements Listener {
       pickaxeMeta.setUnbreakable(true);
       pickaxe.setItemMeta(pickaxeMeta);
       player.getInventory().addItem(pickaxe);
-      player.sendMessage(ChatColor.GREEN + "Infinite Blue Terracotta kit applied to your offhand.");
+      player.sendMessage(ChatColor.GREEN + "You have received the runner kit!");
+      return true;
+    }
+  }
+
+  class ItemDropCommand implements CommandExecutor {
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+      if (!(sender instanceof Player)) {
+        sender.sendMessage(ChatColor.RED + "Only players can use this command.");
+        return true;
+      }
+
+      Location dropLocation;
+      if (args.length == 0) {
+        FileConfiguration bowDropConfig = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "bowdrop.yml"));
+        String world = bowDropConfig.getString("world", "world");
+        double x = bowDropConfig.getDouble("x");
+        double y = bowDropConfig.getDouble("y");
+        double z = bowDropConfig.getDouble("z");
+        dropLocation = new Location(Bukkit.getWorld(world), x, y, z);
+      } else {
+        Player player = (Player) sender;
+        Block targetBlock = player.getTargetBlock(null, 200);
+        if (targetBlock == null) {
+          sender.sendMessage(ChatColor.RED + "Could not find a target block.");
+          return true;
+        }
+        dropLocation = targetBlock.getLocation().add(0, 1, 0);
+      }
+
+      dropLocation.getWorld().strikeLightningEffect(dropLocation);
+
+      ItemStack bow = new ItemStack(Material.BOW);
+      ItemMeta meta = bow.getItemMeta();
+      meta.getPersistentDataContainer().set(specialBowKey, PersistentDataType.BYTE, (byte) 1);
+      bow.setItemMeta(meta);
+      bow.addUnsafeEnchantment(org.bukkit.enchantments.Enchantment.INFINITY, 1);
+      bow.addUnsafeEnchantment(org.bukkit.enchantments.Enchantment.PUNCH, 2);
+
+      dropLocation.getWorld().dropItem(dropLocation, bow);
       return true;
     }
   }
